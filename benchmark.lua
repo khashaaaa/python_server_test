@@ -1,58 +1,31 @@
--- Test configuration
 local config = {
     total_requests = 100000,
     methods = {
-        post = {
-            weight = 0.4,  -- 40% of requests
-            path = "/users/create/"
-        },
-        get = {
-            weight = 0.4,  -- 40% of requests
-            path = "/users/"
-        },
-        put = {
-            weight = 0.1,  -- 10% of requests
-            path = "/users/{id}/update/"
-        },
-        delete = {
-            weight = 0.1,  -- 10% of requests
-            path = "/users/{id}/delete/"
-        }
+        post = { weight = 0.4, path = "/create/" },
+        get = { weight = 0.4, path = "/" },
+        put = { weight = 0.1, path = "/{id}/update/" },
+        delete = { weight = 0.1, path = "/{id}/delete/" }
     }
 }
 
--- Test data
 local first_names = {"Emma", "Liam", "Olivia", "Noah", "Ava", "Oliver", "Isabella", "Lucas", "Sophia", "Mason"}
 local last_names = {"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"}
 local domains = {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "example.com"}
 
--- Counters
 local counter = 0
 local requests_completed = 0
 local start_time = 0
-local stats = {
-    post = { success = 0, failed = 0 },
-    get = { success = 0, failed = 0 },
-    put = { success = 0, failed = 0 },
-    delete = { success = 0, failed = 0 }
-}
+local stats = { post = { success = 0, failed = 0 }, get = { success = 0, failed = 0 }, put = { success = 0, failed = 0 }, delete = { success = 0, failed = 0 } }
 
--- Generate test data
 local function generate_user_data()
     counter = counter + 1
     local first = first_names[math.random(#first_names)]
     local last = last_names[math.random(#last_names)]
     local domain = domains[math.random(#domains)]
-    local email = string.format("%s.%s.%d@%s", 
-        string.lower(first), 
-        string.lower(last),
-        counter,
-        domain)
-    
+    local email = string.format("%s.%s.%d@%s", string.lower(first), string.lower(last), counter, domain)
     return string.format('{"name":"%s %s","email":"%s"}', first, last, email)
 end
 
--- Choose request method based on weights
 local function choose_method()
     local r = math.random()
     local cumulative = 0
@@ -65,14 +38,12 @@ local function choose_method()
     return "get", config.methods.get.path
 end
 
--- Initialize
 function init(args)
     math.randomseed(os.time())
     start_time = os.time()
     print(string.format("\nStarting benchmark with %d total requests...\n", config.total_requests))
 end
 
--- Make request
 function request()
     if requests_completed >= config.total_requests then
         wrk.thread:stop()
@@ -82,36 +53,27 @@ function request()
     requests_completed = requests_completed + 1
     local method, path = choose_method()
     
-    -- Headers for all requests
-    local headers = {
-        ["Content-Type"] = "application/json",
-        ["X-Request-ID"] = string.format("%d-%d", os.time(), requests_completed)
-    }
+    local headers = { ["Content-Type"] = "application/json", ["X-Request-ID"] = string.format("%d-%d", os.time(), requests_completed) }
     
-    -- Handle different request types
     if method == "post" then
         local payload = generate_user_data()
         headers["Content-Length"] = #payload
         return wrk.format("POST", path, headers, payload)
-        
     elseif method == "put" then
         local user_id = math.random(1, 100)
         local payload = generate_user_data()
         headers["Content-Length"] = #payload
         path = string.gsub(path, "{id}", user_id)
         return wrk.format("PUT", path, headers, payload)
-        
     elseif method == "delete" then
         local user_id = math.random(1, 100)
         path = string.gsub(path, "{id}", user_id)
         return wrk.format("DELETE", path, headers)
-        
-    else -- GET
+    else
         return wrk.format("GET", path, headers)
     end
 end
 
--- Track responses
 function response(status, headers, body)
     local success_codes = {[200] = true, [201] = true}
     
@@ -138,7 +100,6 @@ function response(status, headers, body)
     end
 end
 
--- Print results
 function done(summary, latency, requests)
     local duration = os.time() - start_time
     
