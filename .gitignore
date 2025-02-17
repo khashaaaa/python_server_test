@@ -1,0 +1,54 @@
+# Byte-compiled and cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Django specific files
+*.sqlite3
+db.sqlite3
+/media/
+staticfiles/
+static/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# Local development settings
+.env
+config/settings/local.py
+instance/
+.DS_Store
+
+# Migrations cache (optional)
+**/migrations/*.pyc
+**/migrations/*.pyo
+**/migrations/*.pyd
+**/migrations/__pycache__/
+
+# Pytest and coverage reports
+.coverage
+htmlcov/
+*.cover
+*.py,cover
+nosetests.xml
+coverage.xml
+*.log
+*.out
+*.err
+
+# IDE/editor specific files
+.vscode/
+.idea/
+*.iml
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Docker specific files (if using Docker)
+docker-compose.override.yml
